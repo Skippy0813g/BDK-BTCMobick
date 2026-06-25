@@ -8,6 +8,18 @@ This project provides a native wallet SDK core for BTCMobick-based networks.
 Currently available: **Android (Kotlin)**  
 Planned: iOS (Swift)
 
+## Version
+
+**0.1.0**
+
+## Based on
+
+| Component | Version |
+|-----------|---------|
+| bdk-ffi | 3.1.0-alpha.0 |
+| bdk_wallet | 3.0.0 |
+| rust-bitcoin | 0.32.8 |
+
 ## What's included
 
 - `rust-bitcoin/` — forked rust-bitcoin with `Network::Mobick` and `Network::LaptopMining` variants
