@@ -1,0 +1,81 @@
+# bdk-android
+
+This project builds an .aar package for the Android platform that provide Kotlin language bindings for the [BDK] libraries. The Kotlin language bindings are created by the [`bdk-ffi`] project which is included in the root of this repository.
+
+## How to Use
+
+To use the Kotlin language bindings for BDK in your Android project add the following to your gradle dependencies:
+
+```kotlin
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation("org.bitcoindevkit:bdk-android:<version>")
+}
+```
+
+### Example Projects
+
+* [Devkit Wallet](https://github.com/bitcoindevkit/devkit-wallet)
+* [Padawan Wallet](https://github.com/thunderbiscuit/padawan-wallet)
+
+### How to build
+
+1. Clone this repository.
+```shell
+git clone https://github.com/bitcoindevkit/bdk-ffi
+```
+2. Install Android SDK and Build-Tools for API level 30+
+3. Setup `ANDROID_SDK_ROOT` and `ANDROID_NDK_ROOT` path variables which are required by the build tool. Note that currently, NDK version 27.2.12479018 or above is recommended. For example:
+```shell
+# macOS
+export ANDROID_SDK_ROOT=~/Library/Android/sdk
+export ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/27.2.12479018
+
+# Linux
+export ANDROID_SDK_ROOT=/usr/local/lib/android/sdk
+export ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/27.2.12479018
+```
+4. Build Kotlin bindings
+```sh
+# build Android library
+cd bdk-android
+bash ./scripts/build-<your-local-architecture>.sh
+```
+5. Start android emulator and run tests
+```sh
+./gradlew connectedAndroidTest
+```
+
+## How to publish to your local Maven repo
+
+```shell
+just publish-local
+```
+
+## Known issues
+
+### JNA dependency
+
+Depending on the JVM version you use, you might not have the JNA dependency on your classpath. The exception thrown will be
+
+```shell
+class file for com.sun.jna.Pointer not found
+```
+
+The solution is to add JNA as a dependency like so:
+
+```kotlin
+dependencies {
+    implementation("net.java.dev.jna:jna:5.12.1")
+}
+```
+
+### x86 emulators
+
+For some older versions of macOS, Android Studio will recommend users install the x86 version of the emulator by default. This will not work with the bdk-android library, as we do not support 32-bit architectures. Make sure you install an x86_64 emulator to work with bdk-android.
+
+[BDK]: https://github.com/bitcoindevkit/
+[`bdk-ffi`]: https://github.com/bitcoindevkit/bdk-ffi

@@ -1,0 +1,36 @@
+[group("Repo")]
+[doc("Default command; list all available commands.")]
+@list:
+  just --list --unsorted
+
+[group("Repo")]
+[doc("Open repo on GitHub in your default browser.")]
+repo:
+  open https://github.com/bitcoindevkit/bdk-ffi
+
+[group("Build")]
+[doc("Build the library.")]
+build:
+  bash ./build-xcframework.sh
+
+[group("Build")]
+[doc("Build the library in debug mode for faster local testing.")]
+build-dev:
+  bash ./build-xcframework-dev.sh
+
+[group("Build")]
+[doc("Remove all caches and previous build artifacts to start from scratch.")]
+clean:
+  rm -rf ../bdk-ffi/target/
+  rm -rf ./.build/
+  rm -rf ./.swiftpm/
+  rm -rf ./bdkffi.xcframework/
+  rm -rf ./Sources/
+
+[group("Test")]
+[doc("Run all tests.")]
+test:
+  #!/usr/bin/env bash
+  set -o pipefail
+  swift test --no-parallel 2>&1 | \
+    (command -v xcbeautify > /dev/null 2>&1 && xcbeautify || cat)

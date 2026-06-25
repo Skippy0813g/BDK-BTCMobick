@@ -1,0 +1,160 @@
+on: [push, pull_request]
+
+name: CI
+
+permissions: {}
+
+jobs:
+
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      rust_version: ${{ steps.read_toolchain.outputs.rust_version }}
+    steps:
+      - name: "Checkout repo"
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: "Read rust version"
+        id: read_toolchain
+        run: echo "rust_version=$(cat rust-version)" >> $GITHUB_OUTPUT
+
+  build-test:
+    needs: prepare
+    name: Build & Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust:
+          - version: ${{ needs.prepare.outputs.rust_version }}
+          - version: 1.85.0 # MSRV
+        features:
+          - --no-default-features --features bdk_chain/hashbrown
+          - --all-features
+    steps:
+      - name: checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+            toolchain: ${{ matrix.rust.version }}
+            override: true
+            cache: true
+      - name: Pin dependencies for MSRV
+        if: matrix.rust.version == '1.85.0'
+        run: ./ci/pin-msrv.sh
+      - name: Build + Test
+        env:
+          MATRIX_RUST_VERSION: ${{ matrix.rust.version }}
+        run: |
+            cargo build --workspace ${{ matrix.features }}
+            cargo test --workspace ${{ matrix.features }}
+
+  check-no-std:
+    needs: prepare
+    name: Check no_std
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ needs.prepare.outputs.rust_version }}
+          override: true
+          cache: true
+          # target: "thumbv6m-none-eabi"
+      - name: Check bdk_chain
+        working-directory: ./crates/chain
+        # TODO "--target thumbv6m-none-eabi" should work but currently does not
+        run: cargo check --no-default-features --features hashbrown
+      - name: Check esplora
+        working-directory: ./crates/esplora
+        # TODO "--target thumbv6m-none-eabi" should work but currently does not
+        run: cargo check --no-default-features --features bdk_chain/hashbrown
+
+  check-wasm:
+    needs: prepare
+    name: Check WASM
+    runs-on: ubuntu-latest
+    env:
+      CC: clang-14
+      CFLAGS: -I/usr/include
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+        # Install a recent version of clang that supports wasm32
+      - run: wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add - || exit 1
+      - run: sudo apt-get update || exit 1
+      - run: sudo apt-get install -y libclang-common-14-dev clang-14 libc6-dev-i386 || exit 1
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+            toolchain: ${{ needs.prepare.outputs.rust_version }}
+            override: true
+            cache: true
+            target: "wasm32-unknown-unknown"
+      - name: Check esplora
+        working-directory: ./crates/esplora
+        run: cargo check --target wasm32-unknown-unknown --no-default-features --features bdk_core/hashbrown,async
+
+  fmt:
+    name: Rust fmt
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+            toolchain: nightly
+            override: true
+            cache: true
+            components: rustfmt
+      - name: Check fmt
+        run: cargo fmt --all --check
+
+  clippy_check:
+    needs: prepare
+    name: Rust clippy
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+            toolchain: ${{ needs.prepare.outputs.rust_version }}
+            components: clippy
+            override: true
+            cache: true
+      - name: Clippy
+        run: cargo clippy --all-features --all-targets -- -D warnings
+
+  check-docs:
+    needs: prepare
+    name: Check documentation errors
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ needs.prepare.outputs.rust_version }}
+          override: true
+          cache: true
+      - name: Check docs
+        run: RUSTDOCFLAGS='-D warnings' cargo doc --workspace --no-deps

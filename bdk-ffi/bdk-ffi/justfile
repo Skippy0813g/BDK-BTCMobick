@@ -1,0 +1,19 @@
+default:
+  just --list
+
+build:
+  cargo build --profile release-smaller
+
+build-dev:
+  cargo build
+
+check:
+   cargo fmt
+   cargo clippy
+
+test:
+  cargo test
+
+# Build API documentation for gh-pages or local browsing
+docs:
+  bash scripts/build-docs.sh && bash scripts/deploy-docs.sh

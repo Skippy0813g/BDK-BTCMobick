@@ -1,0 +1,27 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/chain",
+    "crates/core",
+    "crates/file_store",
+    "crates/electrum",
+    "crates/esplora",
+    "crates/bitcoind_rpc",
+    "crates/testenv",
+]
+
+[workspace.package]
+authors = ["Bitcoin Dev Kit Developers"]
+
+[workspace.lints.clippy]
+print_stdout = "deny"
+print_stderr = "deny"
+
+[workspace.lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(coverage,coverage_nightly)'] }
+
+[patch.crates-io]
+bitcoin = { path = "../rust-bitcoin/bitcoin" }
+bitcoin-io = { path = "../rust-bitcoin/io" }
+bitcoin-units = { path = "../rust-bitcoin/units" }
+bitcoin_hashes = { path = "../rust-bitcoin/hashes" }
