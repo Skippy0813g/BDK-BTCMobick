@@ -1,5 +1,26 @@
 # BDK-BTCMobick
-Bitcoin Development Kit fork for BTCMobick
+
+A fork of [Bitcoin Development Kit](https://bitcoindevkit.org/) extended to support the **BTCMobick (BMB)** and **LaptopMining (LTM)** networks.
+
+## Overview
+
+This project provides a native wallet SDK core for BTCMobick-based networks.  
+Currently available: **Android (Kotlin)**  
+Planned: iOS (Swift)
+
+## What's included
+
+- `rust-bitcoin/` — forked rust-bitcoin with `Network::Mobick` and `Network::LaptopMining` variants
+- `bdk-ffi/` — UniFFI bindings with Android AAR output
+- `bdk/` — BDK wallet core with patch applied
+- `bip157/` — patched compact block filters
+
+## Networks
+
+| Network | Chain |
+|---------|-------|
+| BTCMobick | BMB |
+| LaptopMining | LTM |
 
 ## Support This Project
 
