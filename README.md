@@ -31,6 +31,7 @@ Planned: iOS (Swift)
 
 | Network | Chain |
 |---------|-------|
+| Bitcoin | BTC |
 | BTCMobick | BMB |
 | LaptopMining | LTM |
 
